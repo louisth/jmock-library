@@ -11,36 +11,35 @@ import org.jmock.internal.StatePredicate;
 import org.jmock.lib.concurrent.internal.FixedTimeout;
 import org.jmock.lib.concurrent.internal.InfiniteTimeout;
 import org.jmock.lib.concurrent.internal.Timeout;
-import org.junit.Assert;
 
 
 /**
  * A ThreadingPolicy that makes the Mockery thread-safe and
  * helps tests synchronise with background threads.
- * 
+ *
  * @author Nat Pryce
  */
 public class Synchroniser implements ThreadingPolicy {
     private final Object sync = new Object();
     private Error firstError = null;
-    
-    
-    /** 
-     * Waits for a StatePredicate to become active.  
-     * 
+
+
+    /**
+     * Waits for a StatePredicate to become active.
+     *
      * Warning: this will wait forever unless the test itself has a timeout.
-     *   
+     *
      * @param p the StatePredicate to wait for
      * @throws InterruptedException
      */
     public void waitUntil(StatePredicate p) throws InterruptedException {
         waitUntil(p, new InfiniteTimeout());
     }
-    
-    /** 
+
+    /**
      * Waits up to a timeout for a StatePredicate to become active.  Fails the
      * test if the timeout expires.
-     *   
+     *
      * @param p the StatePredicate to wait for
      * @param timeoutMs the timeout in milliseconds
      * @throws InterruptedException
@@ -48,7 +47,7 @@ public class Synchroniser implements ThreadingPolicy {
     public void waitUntil(StatePredicate p, long timeoutMs) throws InterruptedException {
         waitUntil(p, new FixedTimeout(timeoutMs));
     }
-    
+
     private void waitUntil(StatePredicate p, Timeout timeout) throws InterruptedException {
         synchronized(sync) {
             while (!p.isActive()) {
@@ -60,14 +59,14 @@ public class Synchroniser implements ThreadingPolicy {
                         throw firstError;
                     }
                     else {
-                        Assert.fail("timed out waiting for " + asString(p));
+                        throw new RuntimeException("timed out waiting for " + asString(p));
                     }
                 }
             }
         }
-        
+
     }
-    
+
     public Invokable synchroniseAccessTo(final Invokable mockObject) {
         return new Invokable() {
             public Object invoke(Invocation invocation) throws Throwable {
