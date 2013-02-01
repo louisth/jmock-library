@@ -177,6 +177,34 @@ public class Expectations implements ExpectationBuilder,
      */
     public <T> T with(Matcher<T> matcher) {
         addParameterMatcher(matcher);
+        Class<T> type=matcher.getParameterType();
+        if (null==type) {
+            return null;
+        } else if (type.equals(Boolean.class) || type.equals(boolean.class)) {
+            //noinspection unchecked
+            return (T)Boolean.FALSE;
+        } else if (type.equals(Character.class) || type.equals(char.class)) {
+            //noinspection unchecked
+            return (T)(Character)'\0';
+        } else if (type.equals(Byte.class) || type.equals(byte.class)) {
+            //noinspection unchecked
+            return (T)(Byte)(byte)0;
+        } else if (type.equals(Short.class) || type.equals(short.class)) {
+            //noinspection unchecked
+            return (T)(Short)(short)0;
+        } else if (type.equals(Integer.class) || type.equals(int.class)) {
+            //noinspection unchecked
+            return (T)(Integer)0;
+        } else if (type.equals(Long.class) || type.equals(long.class)) {
+            //noinspection unchecked
+            return (T)(Long)0L;
+        } else if (type.equals(Float.class) || type.equals(float.class)) {
+            //noinspection unchecked
+            return (T)(Float)0f;
+        } else if (type.equals(Double.class) || type.equals(double.class)) {
+            //noinspection unchecked
+            return (T)(Double)0.0;
+        }
         return null;
     }
     

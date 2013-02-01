@@ -12,7 +12,7 @@ import org.jmock.internal.AllDeclaredFields;
 
 
 public class Mockomatic {
-    private final Mockery mockery;
+    protected final Mockery mockery;
 
     public Mockomatic(Mockery mockery) {
         this.mockery = mockery;
@@ -33,13 +33,13 @@ public class Mockomatic {
         }
     }
 
-    private void autoMock(Object object, Field field) {
+    protected void autoMock(Object object, Field field) {
         setAutoField(field, object, 
                      mockery.mock(field.getType(), field.getName()),
                      "auto-mock field " + field.getName());
     }
 
-    private void autoInstantiate(Object object, Field field) {
+    protected void autoInstantiate(Object object, Field field) {
         final Class<?> type = field.getType();
         if (type == States.class) {
             autoInstantiateStates(field, object);
@@ -52,19 +52,19 @@ public class Mockomatic {
         }
     }
 
-    private void autoInstantiateStates(Field field, Object object) {
+    protected void autoInstantiateStates(Field field, Object object) {
         setAutoField(field, object, 
                      mockery.states(field.getName()), 
                      "auto-instantiate States field " + field.getName());
     }
-    
-    private void autoInstantiateSequence(Field field, Object object) {
+
+    protected void autoInstantiateSequence(Field field, Object object) {
         setAutoField(field, object, 
                      mockery.sequence(field.getName()), 
                      "auto-instantiate Sequence field " + field.getName());
     }
 
-    private void setAutoField(Field field, Object object, Object value, String description) {
+    protected void setAutoField(Field field, Object object, Object value, String description) {
         try {
             field.setAccessible(true);
             field.set(object, value);

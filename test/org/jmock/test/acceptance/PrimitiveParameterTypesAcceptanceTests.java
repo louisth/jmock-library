@@ -22,13 +22,13 @@ public class PrimitiveParameterTypesAcceptanceTests {
     @Test
     public void canSetExpectationsWithMatchersForMethodsWithArgumentsOfPrimitiveTypes() {
         context.checking(new Expectations() {{
-            exactly(1).of (mock).withBoolean(with.booleanIs(equal(true)));
-            exactly(1).of (mock).withByte(with.byteIs(equal((byte)10)));
-            exactly(1).of (mock).withShort(with.shortIs(equal((short) 10)));
-            exactly(1).of (mock).withInt(with.intIs(equal(10)));
-            exactly(1).of (mock).withLong(with.longIs(equal(10L)));
-            exactly(1).of (mock).withFloat(with.floatIs(equal(10.0f)));
-            exactly(1).of (mock).withDouble(with.doubleIs(equal(10.0)));
+            exactly(1).of (mock).withBoolean(with(equal(true)));
+            exactly(1).of (mock).withByte(with(equal((byte)10)));
+            exactly(1).of (mock).withShort(with(equal((short)10)));
+            exactly(1).of (mock).withInt(with(equal(10)));
+            exactly(1).of (mock).withLong(with(equal(10L)));
+            exactly(1).of (mock).withFloat(with(equal(10.0f)));
+            exactly(1).of (mock).withDouble(with(equal(10.0)));
         }});
         
         mock.withBoolean(true);

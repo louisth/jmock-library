@@ -17,14 +17,13 @@ public class CamelCaseNamingSchemeTests extends TestCase {
     }
     
     public interface GPSReceiver {}
-    public interface HTTPClient {};
-    public interface UDPDatagram {};
+    public interface HTTPClient {}
+    public interface UDPDatagram {}
     
     public void testReturnsGoodNamesForClassesThatStartWithAcronyms() {
         assertEquals("gpsReceiver", namingScheme.defaultNameFor(GPSReceiver.class));
         assertEquals("httpClient", namingScheme.defaultNameFor(HTTPClient.class));
         assertEquals("udpDatagram", namingScheme.defaultNameFor(UDPDatagram.class));
-        
     }
     
     public void testReturnsGoodNamesForClassesThatAreEntirelyAcronyms() {
