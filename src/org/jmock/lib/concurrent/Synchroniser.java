@@ -59,12 +59,14 @@ public class Synchroniser implements ThreadingPolicy {
                         throw firstError;
                     }
                     else {
-                        throw new RuntimeException("timed out waiting for " + asString(p));
+                        throw new AssertionError("timed out waiting for " + asString(p));
                     }
                 }
             }
+            if (firstError != null) {
+                throw firstError;
+            }
         }
-
     }
 
     public Invokable synchroniseAccessTo(final Invokable mockObject) {

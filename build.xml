@@ -227,24 +227,24 @@
     <target name="run.tests" depends="jars, testdata">
         <property name="outdir" value="build/reports/tests"/>
         <mkdir dir="${outdir}"/>
-        <!--<junit fork="yes" forkmode="once" printsummary="no" showoutput="yes">-->
-            <!--<classpath>-->
-                <!--<path refid="build.classpath"/>-->
-                <!--<fileset dir="${distdir}" includes="*.jar"/>-->
-            <!--</classpath>-->
+        <junit fork="yes" forkmode="once" printsummary="no" showoutput="yes">
+            <classpath>
+                <path refid="build.classpath"/>
+                <fileset dir="${distdir}" includes="*.jar"/>
+            </classpath>
 
-            <!--<formatter type="brief" usefile="no"/>-->
+            <formatter type="brief" usefile="no"/>
 
-            <!--<batchtest haltonfailure="yes">-->
-                <!--<fileset dir="test">-->
-                    <!--<include name="**/*Tests.java"/>-->
-                    <!--<exclude name="**/Abstract*"/>-->
-                <!--</fileset>-->
-                <!--<fileset dir="example">-->
-                    <!--<include name="**/*Tests.java"/>-->
-                    <!--<exclude name="**/Abstract*"/>-->
-                <!--</fileset>-->
-            <!--</batchtest>-->
-        <!--</junit>-->
+            <batchtest haltonfailure="yes">
+                <fileset dir="test">
+                    <include name="**/*Tests.java"/>
+                    <exclude name="**/Abstract*"/>
+                </fileset>
+                <fileset dir="example">
+                    <include name="**/*Tests.java"/>
+                    <exclude name="**/Abstract*"/>
+                </fileset>
+            </batchtest>
+        </junit>
     </target>
 </project>

@@ -1,7 +1,9 @@
 package org.jmock.test.unit.lib.concurrent;
 
 import static org.hamcrest.Matchers.containsString;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import java.util.concurrent.atomic.AtomicInteger;
@@ -104,12 +106,11 @@ public class SynchroniserTests {
         
         try {
             synchroniser.waitUntil(threads.is("finished"), 100);
+            fail("should have thrown AssertionError");
         }
         catch (AssertionError e) {
-            return;
+            assertEquals("timed out waiting for threads is finished", e.getMessage());
         }
-        
-        fail("should have thrown AssertionError");
     }
     
     @Test
@@ -121,7 +122,12 @@ public class SynchroniserTests {
         
         blitzer.blitz(new Runnable() {
             public void run() {
-                mockObject.action();
+                try {
+                    mockObject.action();
+                    fail("Expected action to fail.");
+                } catch (AssertionError e) {
+                    assertThat(e.getMessage(), containsString("unexpected invocation: mockObject.action()"));
+                }
             }
         });
         
@@ -130,7 +136,7 @@ public class SynchroniserTests {
             fail("should have thrown AssertionError");
         }
         catch (AssertionError e) {
-            assertThat(e.getMessage(), containsString("action()"));
+            assertThat(e.getMessage(), containsString("unexpected invocation: mockObject.action()"));
         }
     }
 
@@ -138,20 +144,20 @@ public class SynchroniserTests {
     public void throwsExpectationErrorIfExpectationFailsWhileWaitingForStateMachineEvenIfWaitSucceeds() throws InterruptedException {
         final States threads = mockery.states("threads");
         
-        mockery.checking(new Expectations() {{
-            oneOf(mockObject).finished();
-                then(threads.is("finished"));
-        }});
-        
         blitzer.blitz(new Runnable() {
             AtomicInteger counter = new AtomicInteger(blitzer.totalActionCount());
             
             public void run() {
                 if (counter.decrementAndGet() == 0) {
-                    mockObject.finished();
+                    threads.become("finished");
                 }
                 else {
-                    mockObject.action();
+                    try {
+                        mockObject.action();
+                        fail("Expected action to fail.");
+                    } catch (AssertionError e) {
+                        assertThat(e.getMessage(), containsString("unexpected invocation: mockObject.action()"));
+                    }
                 }
             }
         });
@@ -161,8 +167,9 @@ public class SynchroniserTests {
             fail("should have thrown AssertionError");
         }
         catch (AssertionError e) {
-            assertThat(e.getMessage(), containsString("action()"));
+            assertThat(e.getMessage(), containsString("unexpected invocation: mockObject.action()"));
         }
+        assertTrue(threads.is("finished").isActive());
     }
     
     @After

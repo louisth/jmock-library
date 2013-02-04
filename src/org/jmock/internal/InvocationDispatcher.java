@@ -11,8 +11,8 @@ import java.util.Iterator;
 import java.util.List;
 
 public class InvocationDispatcher implements ExpectationCollector, SelfDescribing {
-	private List<Expectation> expectations = new ArrayList<Expectation>();
-	private List<StateMachine> stateMachines = new ArrayList<StateMachine>();
+    private List<Expectation> expectations = new ArrayList<Expectation>();
+    private List<StateMachine> stateMachines = new ArrayList<StateMachine>();
     
     public StateMachine newStateMachine(String name) {
         StateMachine stateMachine = new StateMachine(name);
@@ -20,10 +20,10 @@ public class InvocationDispatcher implements ExpectationCollector, SelfDescribin
         return stateMachine;
     }
     
-	public void add(Expectation expectation) {
-		expectations.add(expectation);
-	}
-	
+    public void add(Expectation expectation) {
+        expectations.add(expectation);
+    }
+    
     public void describeTo(Description description) {
         describe(description, expectations);
     }
@@ -67,22 +67,30 @@ public class InvocationDispatcher implements ExpectationCollector, SelfDescribin
     
 
     public boolean isSatisfied() {
-		for (Expectation expectation : expectations) {
-		    if (! expectation.isSatisfied()) {
+        for (Expectation expectation : expectations) {
+            if (! expectation.isSatisfied()) {
                 return false;
             }
         }
         return true;
-	}
-	
-	public Object dispatch(Invocation invocation) throws Throwable {
-		for (Expectation expectation : expectations) {
-		    if (expectation.matches(invocation)) {
-		        return expectation.invoke(invocation);
+    }
+    
+    public Object dispatch(Invocation invocation) throws Throwable {
+        for (Expectation expectation : expectations) {
+            if (expectation.matches(invocation)) {
+                return expectation.invoke(invocation);
             }
         }
         
         throw ExpectationError.unexpected("unexpected invocation", invocation);
-	}
+    }
 
+    public void clearHistory() {
+        for (Iterator<Expectation> itr=expectations.iterator(); itr.hasNext(); ) {
+            Expectation expectation=itr.next();
+            if (expectation.isHistoric()) {
+                itr.remove();
+            }
+        }
+    }
 }

@@ -114,8 +114,8 @@ public class Mockery implements SelfDescribing {
      * Creates a mock object of type <var>typeToMock</var> and generates a name for it.
      */
     public <T> T mock(Class<T> typeToMock) {
-		return mock(typeToMock, namingScheme.defaultNameFor(typeToMock));
-	}
+        return mock(typeToMock, namingScheme.defaultNameFor(typeToMock));
+    }
     
     /**
      * Creates a mock object of type <var>typeToMock</var> with the given name.
@@ -173,10 +173,10 @@ public class Mockery implements SelfDescribing {
      * This method can be called multiple times per test and the expectations defined in
      * each block are combined as if they were defined in same order within a single block.
      */
-	public void checking(ExpectationBuilder expectations) {
-	    expectations.buildExpectations(defaultAction, dispatcher);
+    public void checking(ExpectationBuilder expectations) {
+        expectations.buildExpectations(defaultAction, dispatcher);
     }
-	
+    
     /**
      * Adds an expected invocation that the object under test will perform upon
      * objects in its context during the test.
@@ -187,19 +187,29 @@ public class Mockery implements SelfDescribing {
     public void addExpectation(Expectation expectation) {
         dispatcher.add(expectation);
     }
-	
+    
     /**
      * Fails the test if there are any expectations that have not been met.
      */
-	public void assertIsSatisfied() {
-	    if (firstError != null) {
-	        throw firstError;
-	    }
-	    else if (!dispatcher.isSatisfied()) {
+    public void assertIsSatisfied() {
+        if (firstError != null) {
+            throw firstError;
+        }
+        else if (!dispatcher.isSatisfied()) {
             throw expectationErrorTranslator.translate(
                 ExpectationError.notAllSatisfied(this));
         }
-	}
+    }
+
+    /**
+     * Clears clutter from the history to help with diagnosing long 
+     * running tests. Clears past actions and expectations that 
+     * have already been met and thus can no longer be met.
+     */
+    public void clearHistory() {
+        actualInvocations.clear();
+        dispatcher.clearHistory();
+    }
     
     public void describeTo(Description description) {
         description.appendDescriptionOf(dispatcher);

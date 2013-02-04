@@ -22,38 +22,38 @@ import java.util.List;
 public class InvocationExpectation implements Expectation {
     private static ParametersMatcher ANY_PARAMETERS = new AnyParametersMatcher();
     private Cardinality cardinality = Cardinality.ALLOWING;
-	private Matcher<?> objectMatcher = IsAnything.anything();
-	private Matcher<? super Method> methodMatcher = IsAnything.anything("<any method>");
-	private boolean methodIsKnownToBeVoid = false;
-	private ParametersMatcher parametersMatcher = ANY_PARAMETERS;
+    private Matcher<?> objectMatcher = IsAnything.anything();
+    private Matcher<? super Method> methodMatcher = IsAnything.anything("<any method>");
+    private boolean methodIsKnownToBeVoid = false;
+    private ParametersMatcher parametersMatcher = ANY_PARAMETERS;
     private Action action = new VoidAction();
     private boolean actionIsDefault = true;
     private List<OrderingConstraint> orderingConstraints = new ArrayList<OrderingConstraint>();
     private List<SideEffect> sideEffects = new ArrayList<SideEffect>();
     
-	private int invocationCount = 0;
-	
+    private int invocationCount = 0;
+    
     public void setCardinality(Cardinality cardinality) {
         this.cardinality = cardinality;
     }
-	
-	public void setObjectMatcher(Matcher<?> objectMatcher) {
-		this.objectMatcher = objectMatcher;
-	}
-	
-	public void setMethod(Method method) {
-	    this.methodMatcher = new MethodMatcher(method);
-	    this.methodIsKnownToBeVoid = method.getReturnType() == void.class;
-	}
-	
-	public void setMethodMatcher(Matcher<? super Method> matcher) {
-		this.methodMatcher = matcher;
-		this.methodIsKnownToBeVoid = false;
-	}
-	
-	public void setParametersMatcher(ParametersMatcher parametersMatcher) {
-		this.parametersMatcher = parametersMatcher;
-	}
+    
+    public void setObjectMatcher(Matcher<?> objectMatcher) {
+        this.objectMatcher = objectMatcher;
+    }
+    
+    public void setMethod(Method method) {
+        this.methodMatcher = new MethodMatcher(method);
+        this.methodIsKnownToBeVoid = method.getReturnType() == void.class;
+    }
+    
+    public void setMethodMatcher(Matcher<? super Method> matcher) {
+        this.methodMatcher = matcher;
+        this.methodIsKnownToBeVoid = false;
+    }
+    
+    public void setParametersMatcher(ParametersMatcher parametersMatcher) {
+        this.parametersMatcher = parametersMatcher;
+    }
 
     public void addOrderingConstraint(OrderingConstraint orderingConstraint) {
         orderingConstraints.add(orderingConstraint);
@@ -142,30 +142,35 @@ public class InvocationExpectation implements Expectation {
     public boolean allowsMoreInvocations() {
         return cardinality.allowsMoreInvocations(invocationCount);
     }
-    
+
+    @Override
+    public boolean isHistoric() {
+        return !cardinality.allowsMoreInvocations(invocationCount) && cardinality.allowsMoreInvocations(0);
+    }
+
     public boolean matches(Invocation invocation) {
-		return allowsMoreInvocations()
-			&& objectMatcher.matches(invocation.getInvokedObject())
-			&& methodMatcher.matches(invocation.getInvokedMethod())
-			&& parametersMatcher.matches(invocation.getParametersAsArray())
+        return allowsMoreInvocations()
+            && objectMatcher.matches(invocation.getInvokedObject())
+            && methodMatcher.matches(invocation.getInvokedMethod())
+            && parametersMatcher.matches(invocation.getParametersAsArray())
             && isInCorrectOrder();
         
-	}
+    }
     
-	private boolean isInCorrectOrder() {
+    private boolean isInCorrectOrder() {
         for (OrderingConstraint constraint : orderingConstraints) {
             if (!constraint.allowsInvocationNow()) return false;
         }
         return true;
     }
-	
+    
     public Object invoke(Invocation invocation) throws Throwable {
-		invocationCount++;
-		performSideEffects();
-		final Object result = action.invoke(invocation);
+        invocationCount++;
+        performSideEffects();
+        final Object result = action.invoke(invocation);
         invocation.checkReturnTypeCompatibility(result);
         return result;
-	}
+    }
 
     private void performSideEffects() {
         for (SideEffect sideEffect : sideEffects) {

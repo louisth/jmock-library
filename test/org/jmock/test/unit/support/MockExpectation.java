@@ -7,30 +7,35 @@ import org.jmock.api.Invocation;
 import org.junit.Assert;
 
 public class MockExpectation extends Assert implements Expectation {
-	public boolean matches;
+    public boolean matches;
     public boolean hasBeenInvoked;
     public boolean isSatisfied;
     public boolean allowsMoreInvocations;
 
-  public MockExpectation(boolean matches, boolean isSatisfied, boolean allowsMoreInvocations) {
-		this.matches = matches;
-		this.isSatisfied = isSatisfied;
+    public MockExpectation(boolean matches, boolean isSatisfied, boolean allowsMoreInvocations) {
+        this.matches = matches;
+        this.isSatisfied = isSatisfied;
         this.allowsMoreInvocations = allowsMoreInvocations;
-	}
-	
-	public boolean matches(Invocation invocation) {
-		return matches;
-	}
-
-  public boolean allowsMoreInvocations() {
-        return allowsMoreInvocations;
     }
     
+    public boolean matches(Invocation invocation) {
+        return matches;
+    }
+
+    public boolean allowsMoreInvocations() {
+        return allowsMoreInvocations;
+    }
+
+    @Override
+    public boolean isHistoric() {
+        throw new RuntimeException("Expected this statement to never be executed.");
+    }
+
     public boolean isSatisfied() {
         return isSatisfied;
     }
     
-	private boolean shouldBeInvoked = true;
+    private boolean shouldBeInvoked = true;
     private Invocation expectedInvocation = null;
     public Object invokeResult = null;
     public boolean wasInvoked = false;
@@ -44,7 +49,7 @@ public class MockExpectation extends Assert implements Expectation {
         expectedInvocation = invocation;
     }
     
-	public Object invoke(Invocation invocation) throws Throwable {
+    public Object invoke(Invocation invocation) throws Throwable {
         assertTrue("should not have been invoked; invocation: " + invocation, 
                    shouldBeInvoked);
         
@@ -53,7 +58,7 @@ public class MockExpectation extends Assert implements Expectation {
         }
         wasInvoked = true;
         return invokeResult;
-	}
+    }
 
     public void describeTo(Description description) {
         throw new UnsupportedOperationException("not implemented");
@@ -62,5 +67,4 @@ public class MockExpectation extends Assert implements Expectation {
     public void describeMismatch(Invocation invocation, Description description) {
         throw new UnsupportedOperationException("not implemented");
     }
-
 }

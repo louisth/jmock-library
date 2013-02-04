@@ -27,8 +27,15 @@ public interface Expectation extends SelfDescribing {
      *   occur, <code>false</code> otherwise.
      */
     boolean allowsMoreInvocations();
+
+    /**
+     * Is this expectation only useful as history? That is, was it 
+     * ever possible to satisfy this expectation and does it allow no
+     * more invocations?
+     */
+    boolean isHistoric();
     
-	/**
+    /**
      * Can the Expectation be invoked with <var>invocation</var>?
      * 
      * @param invocation
@@ -36,7 +43,7 @@ public interface Expectation extends SelfDescribing {
      * @return
      *   <code>true</code> if the expectation can be invoked with
      *   <var>invocation</var>, <code>false</code> otherwise.
-	 */
+     */
     boolean matches(Invocation invocation);
     
     void describeMismatch(Invocation invocation, Description description);
@@ -61,6 +68,6 @@ public interface Expectation extends SelfDescribing {
      *     a value or throw a checked exception that is incompatible with the
      *     return type of the method being mocked
      */
-	Object invoke(Invocation invocation) throws Throwable;
+    Object invoke(Invocation invocation) throws Throwable;
 
 }
