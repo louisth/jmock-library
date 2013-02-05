@@ -31,6 +31,62 @@ public class RecordingAcceptanceTests extends TestCase {
             "mock.doSomethingWith(\"x\", \"y\")"));
     }
 
+    public void testClearHistory() {
+        context.checking(new Expectations() {{
+            allowing(mock).doSomething();
+            oneOf(mock).doSomethingWith("foo");
+            atMost(1).of(mock).doSomethingWith("x", "y");
+            atMost(1).of(mock).doSomethingWith("X", "Y");
+            never(mock).method1();
+        }});
+
+        assertThat(asString(context), containsInOrder(
+            "expectations:",
+            "allowed, never invoked: mock.doSomething()",
+            "! expected once, never invoked: mock.doSomethingWith(\"foo\")",
+            "expected at most 1 time, never invoked: mock.doSomethingWith(\"x\", \"y\")",
+            "expected at most 1 time, never invoked: mock.doSomethingWith(\"X\", \"Y\")",
+            "expected never, never invoked: mock.method1()",
+            "what happened before this:",
+            "nothing!"));
+
+        context.clearHistory();
+        assertThat(asString(context), containsInOrder(
+            "expectations:",
+            "allowed, never invoked: mock.doSomething()",
+            "! expected once, never invoked: mock.doSomethingWith(\"foo\")",
+            "expected at most 1 time, never invoked: mock.doSomethingWith(\"x\", \"y\")",
+            "expected at most 1 time, never invoked: mock.doSomethingWith(\"X\", \"Y\")",
+            "expected never, never invoked: mock.method1()",
+            "what happened before this:",
+            "nothing!"));
+        
+        mock.doSomething();
+        mock.doSomethingWith("foo");
+        mock.doSomethingWith("x", "y");
+
+        assertThat(asString(context), containsInOrder(
+            "expectations:",
+            "allowed, already invoked 1 time: mock.doSomething()",
+            "expected once, already invoked 1 time: mock.doSomethingWith(\"foo\")",
+            "expected at most 1 time, already invoked 1 time: mock.doSomethingWith(\"x\", \"y\")",
+            "expected at most 1 time, never invoked: mock.doSomethingWith(\"X\", \"Y\")",
+            "expected never, never invoked: mock.method1()",
+            "what happened before this:",
+            "mock.doSomething()",
+            "mock.doSomethingWith(\"foo\")",
+            "mock.doSomethingWith(\"x\", \"y\")"));
+
+        context.clearHistory();
+        assertThat(asString(context), containsInOrder(
+            "expectations:",
+            "allowed, already invoked 1 time: mock.doSomething()",
+            "expected at most 1 time, never invoked: mock.doSomethingWith(\"X\", \"Y\")",
+            "expected never, never invoked: mock.method1()",
+            "what happened before this:",
+            "nothing!"));
+    }
+
     static class ExampleException extends RuntimeException {}
     
     public void testRecordsInvocationsThatThrowExceptions() {

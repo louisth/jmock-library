@@ -8,7 +8,6 @@ import org.junit.Assert;
 
 public class MockExpectation extends Assert implements Expectation {
     public boolean matches;
-    public boolean hasBeenInvoked;
     public boolean isSatisfied;
     public boolean allowsMoreInvocations;
 
@@ -18,19 +17,22 @@ public class MockExpectation extends Assert implements Expectation {
         this.allowsMoreInvocations = allowsMoreInvocations;
     }
     
+    @Override // from Expectation
     public boolean matches(Invocation invocation) {
         return matches;
     }
 
+    @Override // from Expectation
     public boolean allowsMoreInvocations() {
         return allowsMoreInvocations;
     }
 
-    @Override
+    @Override // from Expectation
     public boolean isHistoric() {
         throw new RuntimeException("Expected this statement to never be executed.");
     }
 
+    @Override // from Expectation
     public boolean isSatisfied() {
         return isSatisfied;
     }
@@ -49,6 +51,12 @@ public class MockExpectation extends Assert implements Expectation {
         expectedInvocation = invocation;
     }
     
+    @Override // from Expectation
+    public void preInvoke() {
+        // nothing to do - validation will happen in invoke()
+    }
+
+    @Override // from Expectation
     public Object invoke(Invocation invocation) throws Throwable {
         assertTrue("should not have been invoked; invocation: " + invocation, 
                    shouldBeInvoked);
@@ -60,10 +68,12 @@ public class MockExpectation extends Assert implements Expectation {
         return invokeResult;
     }
 
+    @Override // from SelfDescribing
     public void describeTo(Description description) {
         throw new UnsupportedOperationException("not implemented");
     }
 
+    @Override // from Expectation
     public void describeMismatch(Invocation invocation, Description description) {
         throw new UnsupportedOperationException("not implemented");
     }

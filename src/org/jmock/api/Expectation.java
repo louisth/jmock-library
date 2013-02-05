@@ -49,6 +49,11 @@ public interface Expectation extends SelfDescribing {
     void describeMismatch(Invocation invocation, Description description);
 
     /**
+     * Performs internal operations that must happen before locks are released. 
+     */
+    void preInvoke();
+
+    /**
      * Invokes the expectation: records that the invocation has
      * occurred and fakes some behaviour in response.
      * 
@@ -69,5 +74,4 @@ public interface Expectation extends SelfDescribing {
      *     return type of the method being mocked
      */
     Object invoke(Invocation invocation) throws Throwable;
-
 }

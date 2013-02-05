@@ -7,9 +7,7 @@ import java.lang.reflect.Method;
 
 import junit.framework.TestCase;
 
-import org.hamcrest.BaseMatcher;
 import org.hamcrest.Description;
-import org.hamcrest.Matcher;
 import org.hamcrest.StringDescription;
 import org.jmock.api.Invocation;
 import org.jmock.internal.Cardinality;
@@ -28,16 +26,9 @@ public class InvocationExpectationTests extends TestCase {
     Object targetObject = "targetObject";
     Method method = methodFactory.newMethod("method");
     
-    public <T> Matcher<T> mockMatcher(final T expected, final boolean result) {
-        return new BaseMatcher<T>() {
-            public boolean matches(Object actual) {
-                assertTrue("expected " + expected + ", was " + actual,
-                           equalTo(expected).matches(actual));
-                return result;
-            }
-            public void describeTo(Description description) {
-            }
-        };
+    private Object invoke(Invocation invocation) throws Throwable {
+        expectation.preInvoke();
+        return expectation.invoke(invocation);
     }
     
     public void testMatchesAnythingByDefault() {
@@ -91,7 +82,7 @@ public class InvocationExpectationTests extends TestCase {
         int i;
         for (i = 0; i < maxInvocationCount; i++) {
             assertTrue("should match after " + i +" invocations", expectation.matches(invocation));
-            expectation.invoke(invocation);
+            invoke(invocation);
         }
         assertFalse("should not match after " + i + " invocations", expectation.matches(invocation));
     }
@@ -109,7 +100,7 @@ public class InvocationExpectationTests extends TestCase {
             assertFalse("should not be satisfied after " + i +" invocations",
                     expectation.isSatisfied());
             
-            expectation.invoke(invocation);
+            invoke(invocation);
         }
 
         assertTrue("should match after " + i +" invocations", 
@@ -129,7 +120,7 @@ public class InvocationExpectationTests extends TestCase {
         
         expectation.setAction(action);
         
-        Object actualResult = expectation.invoke(invocation);
+        Object actualResult = invoke(invocation);
         
         assertSame("actual result", action.result, actualResult);
         assertTrue("action1 was invoked", action.wasInvoked);
@@ -143,7 +134,7 @@ public class InvocationExpectationTests extends TestCase {
         expectation.addSideEffect(sideEffect2);
         
         Invocation invocation = new Invocation("targetObject", methodFactory.newMethod("method"));
-        expectation.invoke(invocation);
+        invoke(invocation);
         
         assertTrue("side effect 1 should have been performed", sideEffect1.wasPerformed);
         assertTrue("side effect 2 should have been performed", sideEffect2.wasPerformed);
@@ -171,7 +162,7 @@ public class InvocationExpectationTests extends TestCase {
     public void testReturnsNullIfHasNoActionsWhenInvoked() throws Throwable {
         Invocation invocation = new Invocation(targetObject, method, Invocation.NO_PARAMETERS);
         
-        Object actualResult = expectation.invoke(invocation);
+        Object actualResult = invoke(invocation);
         
         assertNull("should have returned null", actualResult);
     }
@@ -180,11 +171,11 @@ public class InvocationExpectationTests extends TestCase {
     public void testFailsIfActionReturnsAnIncompatibleValue() throws Throwable {
         final Method stringReturningMethod = methodFactory.newMethod("tester", new Class[0], String.class, new Class[0]);
         Invocation invocation = new Invocation(targetObject, stringReturningMethod, Invocation.NO_PARAMETERS);
-        ReturnValueAction action = new ReturnValueAction(new Integer(666));
+        ReturnValueAction action = new ReturnValueAction(666);
         expectation.setAction(action);
         
         try {
-            expectation.invoke(invocation);
+            invoke(invocation);
             fail("Should have thrown an IllegalStateException");
         } catch (IllegalStateException expected) {
             AssertThat.stringIncludes("Shows returned type", "java.lang.Integer", expected.getMessage());
@@ -203,8 +194,8 @@ public class InvocationExpectationTests extends TestCase {
         assertTrue(expectation.allowsMoreInvocations());
         assertFalse(expectation.isSatisfied());
         
-        expectation.invoke(invocation);
-        expectation.invoke(invocation);
+        invoke(invocation);
+        invoke(invocation);
         
         assertFalse(expectation.allowsMoreInvocations());
         assertTrue(expectation.isSatisfied());
@@ -253,12 +244,12 @@ public class InvocationExpectationTests extends TestCase {
         AssertThat.stringIncludes("should describe as not invoked",
                                   "never invoked", StringDescription.toString(expectation));
         
-        expectation.invoke(invocation);
+        invoke(invocation);
         AssertThat.stringIncludes("should describe as invoked 1 time",
                                   "invoked 1 time", StringDescription.toString(expectation));
-        
-        expectation.invoke(invocation);
-        expectation.invoke(invocation);
+
+        invoke(invocation);
+        invoke(invocation);
         AssertThat.stringIncludes("should describe as invoked 3 times",
                                   "invoked 3 times", StringDescription.toString(expectation));
     }
@@ -276,7 +267,7 @@ public class InvocationExpectationTests extends TestCase {
         assertFalse(expectation.isHistoric());
 
         Invocation invocation = new Invocation(targetObject, method, Invocation.NO_PARAMETERS);
-        expectation.invoke(invocation);
+        invoke(invocation);
         
         expectation.setCardinality(Cardinality.between(0, Integer.MAX_VALUE));
         assertFalse(expectation.isHistoric());
@@ -289,12 +280,12 @@ public class InvocationExpectationTests extends TestCase {
         expectation.setCardinality(Cardinality.between(2, 3));
         assertFalse(expectation.isHistoric());
 
-        expectation.invoke(invocation);
+        invoke(invocation);
 
         expectation.setCardinality(Cardinality.between(2, 3));
         assertFalse(expectation.isHistoric());
 
-        expectation.invoke(invocation);
+        invoke(invocation);
 
         expectation.setCardinality(Cardinality.between(0, Integer.MAX_VALUE));
         assertFalse(expectation.isHistoric());

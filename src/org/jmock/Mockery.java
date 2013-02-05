@@ -32,10 +32,11 @@ public class Mockery implements SelfDescribing {
     private MockObjectNamingScheme namingScheme = CamelCaseNamingScheme.INSTANCE;
     private ThreadingPolicy threadingPolicy = new SingleThreadedPolicy();
 
+    private final Object lock = new Object();
     private final Set<String> mockNames = new HashSet<String>();
     private final ReturnDefaultValueAction defaultAction = new ReturnDefaultValueAction(imposteriser);
     private final List<Invocation> actualInvocations = new ArrayList<Invocation>();
-    private final InvocationDispatcher dispatcher = new InvocationDispatcher();
+    private final InvocationDispatcher dispatcher = new InvocationDispatcher(lock);
 
     private Error firstError = null;
 
@@ -54,7 +55,9 @@ public class Mockery implements SelfDescribing {
      *    is invoked for which an explicit return value has has not been specified.
      */
     public void setDefaultResultForType(Class<?> type, Object result) {
-        defaultAction.addResult(type, result);
+        synchronized (lock) {
+            defaultAction.addResult(type, result);
+        }
     }
     
     /**
@@ -65,8 +68,10 @@ public class Mockery implements SelfDescribing {
      * Mockery if you want to mock classes.
      */
     public void setImposteriser(Imposteriser imposteriser) {
-        this.imposteriser = imposteriser;
-        this.defaultAction.setImposteriser(imposteriser);
+        synchronized (lock) {
+            this.imposteriser = imposteriser;
+            this.defaultAction.setImposteriser(imposteriser);
+        }
     }
     
     /**
@@ -78,7 +83,9 @@ public class Mockery implements SelfDescribing {
      * called "bananaSplit" if it is not explicitly named in the test.
      */
     public void setNamingScheme(MockObjectNamingScheme namingScheme) {
-        this.namingScheme = namingScheme;
+        synchronized (lock) {
+            this.namingScheme = namingScheme;
+        }
     }
     
     /**
@@ -91,7 +98,9 @@ public class Mockery implements SelfDescribing {
      * failures using its own error type.
      */
     public void setExpectationErrorTranslator(ExpectationErrorTranslator expectationErrorTranslator) {
-        this.expectationErrorTranslator = expectationErrorTranslator;
+        synchronized (lock) {
+            this.expectationErrorTranslator = expectationErrorTranslator;
+        }
     }
     
     /**
@@ -103,7 +112,9 @@ public class Mockery implements SelfDescribing {
      *  @see Synchroniser
      */
     public void setThreadingPolicy(ThreadingPolicy threadingPolicy) {
-        this.threadingPolicy = threadingPolicy;
+        synchronized (lock) {
+            this.threadingPolicy = threadingPolicy;
+        }
     }
     
     /*
@@ -114,27 +125,27 @@ public class Mockery implements SelfDescribing {
      * Creates a mock object of type <var>typeToMock</var> and generates a name for it.
      */
     public <T> T mock(Class<T> typeToMock) {
-        return mock(typeToMock, namingScheme.defaultNameFor(typeToMock));
+        synchronized (lock) {
+            return mock(typeToMock, namingScheme.defaultNameFor(typeToMock));
+        }
     }
     
     /**
      * Creates a mock object of type <var>typeToMock</var> with the given name.
      */
     public <T> T mock(Class<T> typeToMock, String name) {
-        if (mockNames.contains(name)) {
-            throw new IllegalArgumentException("a mock with name " + name + " already exists");
+        synchronized (lock) {
+            if (mockNames.contains(name)) {
+                throw new IllegalArgumentException("a mock with name " + name + " already exists");
+            }
+            mockNames.add(name);
+
+            MockObject mockObject = new MockObject(typeToMock, name);
+            InvocationDiverter<CaptureControl> invocationDiverter = new InvocationDiverter<CaptureControl>(CaptureControl.class, mockObject, mockObject);
+            ProxiedObjectIdentity proxiedObjectIdentity = new ProxiedObjectIdentity(invocationDiverter);
+            Invokable synchronizedInvokable = threadingPolicy.synchroniseAccessTo(proxiedObjectIdentity);
+            return imposteriser.imposterise(synchronizedInvokable, typeToMock, CaptureControl.class);
         }
-        
-        final MockObject mock = new MockObject(typeToMock, name);
-        mockNames.add(name);
-        
-        Invokable invokable =
-            threadingPolicy.synchroniseAccessTo(
-                new ProxiedObjectIdentity(
-                    new InvocationDiverter<CaptureControl>(
-                        CaptureControl.class, mock, mock)));
-        
-        return imposteriser.imposterise(invokable, typeToMock, CaptureControl.class);
     }
     
     /** 
@@ -192,12 +203,14 @@ public class Mockery implements SelfDescribing {
      * Fails the test if there are any expectations that have not been met.
      */
     public void assertIsSatisfied() {
-        if (firstError != null) {
-            throw firstError;
-        }
-        else if (!dispatcher.isSatisfied()) {
-            throw expectationErrorTranslator.translate(
-                ExpectationError.notAllSatisfied(this));
+        synchronized (lock) {
+            if (firstError != null) {
+                throw firstError;
+            }
+            else if (!dispatcher.isSatisfied()) {
+                throw expectationErrorTranslator.translate(
+                    ExpectationError.notAllSatisfied(this));
+            }
         }
     }
 
@@ -207,13 +220,18 @@ public class Mockery implements SelfDescribing {
      * have already been met and thus can no longer be met.
      */
     public void clearHistory() {
-        actualInvocations.clear();
-        dispatcher.clearHistory();
+        synchronized (lock) {
+            actualInvocations.clear();
+            dispatcher.clearHistory();
+        }
     }
     
+    @Override // from SelfDescribing
     public void describeTo(Description description) {
-        description.appendDescriptionOf(dispatcher);
-        describeHistory(description);
+        synchronized (lock) {
+            description.appendDescriptionOf(dispatcher);
+            describeHistory(description);
+        }
     }
 
     private void describeMismatch(Invocation invocation, Description description) {
@@ -233,23 +251,24 @@ public class Mockery implements SelfDescribing {
     }
 
     private Object dispatch(Invocation invocation) throws Throwable {
-        if (firstError != null) {
-            throw firstError;
-        }
-        
-        try {
-            Object result = dispatcher.dispatch(invocation);
+        synchronized (lock) {
+            if (firstError != null) {
+                throw firstError;
+            }
             actualInvocations.add(invocation);
-            return result;
+        }
+        try {
+            return dispatcher.dispatch(invocation);
         }
         catch (ExpectationError e) {
-            firstError = expectationErrorTranslator.translate(mismatchDescribing(e));
-            firstError.setStackTrace(e.getStackTrace());
-            throw firstError;
-        }
-        catch (Throwable t) {
-            actualInvocations.add(invocation);
-            throw t;
+            synchronized (lock) {
+                actualInvocations.remove(invocation);
+                if (firstError == null) {
+                    firstError = expectationErrorTranslator.translate(mismatchDescribing(e));
+                    firstError.setStackTrace(e.getStackTrace());
+                }
+                throw firstError;
+            }
         }
     }
     
@@ -272,15 +291,17 @@ public class Mockery implements SelfDescribing {
             this.mockedType = mockedType;
         }
         
-        @Override
+        @Override // from Object
         public String toString() {
             return name;
         }
-        
+
+        @Override // from Invokable
         public Object invoke(Invocation invocation) throws Throwable {
             return dispatch(invocation);
         }
 
+        @Override // from CaptureControl
         public Object captureExpectationTo(ExpectationCapture capture) {
             return imposteriser.imposterise(
                 new ObjectMethodExpectationBouncer(new InvocationToExpectationTranslator(capture, defaultAction)), 

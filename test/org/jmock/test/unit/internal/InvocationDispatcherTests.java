@@ -9,20 +9,20 @@ import org.jmock.test.unit.support.MethodFactory;
 import org.jmock.test.unit.support.MockExpectation;
 
 public class InvocationDispatcherTests extends TestCase {
-	MethodFactory methodFactory = new MethodFactory();
-	Invocation invocation = new Invocation(
-	    "invokedObject", 
-		methodFactory.newMethod("invokedMethod"),
-		Invocation.NO_PARAMETERS);
-	
-	static final boolean NOT_RELEVANT = true;
-	
+    MethodFactory methodFactory = new MethodFactory();
+    Invocation invocation = new Invocation(
+        "invokedObject", 
+        methodFactory.newMethod("invokedMethod"),
+        Invocation.NO_PARAMETERS);
+    
+    static final boolean NOT_RELEVANT = true;
+    
     public void testInvokesFirstMatchingExpectationInGroup() throws Throwable {
         MockExpectation expectation1 = new MockExpectation(false, NOT_RELEVANT, NOT_RELEVANT);
         MockExpectation expectation2 = new MockExpectation(true, NOT_RELEVANT, NOT_RELEVANT);
         MockExpectation expectation3 = new MockExpectation(true, NOT_RELEVANT, NOT_RELEVANT);
         
-        InvocationDispatcher dispatcher = new InvocationDispatcher();
+        InvocationDispatcher dispatcher = new InvocationDispatcher(new Object());
         dispatcher.add(expectation1);
         dispatcher.add(expectation2);
         dispatcher.add(expectation3);
@@ -42,7 +42,7 @@ public class InvocationDispatcherTests extends TestCase {
         MockExpectation expectation2 = new MockExpectation(false, NOT_RELEVANT, NOT_RELEVANT);
         MockExpectation expectation3 = new MockExpectation(false, NOT_RELEVANT, NOT_RELEVANT);
         
-        InvocationDispatcher dispatcher = new InvocationDispatcher();
+        InvocationDispatcher dispatcher = new InvocationDispatcher(new Object());
         dispatcher.add(expectation1);
         dispatcher.add(expectation2);
         dispatcher.add(expectation3);
@@ -61,25 +61,25 @@ public class InvocationDispatcherTests extends TestCase {
     }
 
     public void testIsSatisfiedOnlyIfAllExpectationsAreSatisfied() {
-        InvocationDispatcher dispatcherAll = new InvocationDispatcher();
+        InvocationDispatcher dispatcherAll = new InvocationDispatcher(new Object());
         dispatcherAll.add(new MockExpectation(NOT_RELEVANT, true, NOT_RELEVANT));
         dispatcherAll.add(new MockExpectation(NOT_RELEVANT, true, NOT_RELEVANT));
         assertTrue("should be satisfied if all expectations are satisfied",
                    dispatcherAll.isSatisfied());
         
-        InvocationDispatcher dispatcher1 = new InvocationDispatcher();
+        InvocationDispatcher dispatcher1 = new InvocationDispatcher(new Object());
         dispatcher1.add(new MockExpectation(NOT_RELEVANT, true, NOT_RELEVANT));
         dispatcher1.add(new MockExpectation(NOT_RELEVANT, false, NOT_RELEVANT));
         assertFalse("should not be satisfied if first expectation is not satisfied",
                    dispatcher1.isSatisfied());
         
-        InvocationDispatcher dispatcher2 = new InvocationDispatcher();
+        InvocationDispatcher dispatcher2 = new InvocationDispatcher(new Object());
         dispatcher2.add(new MockExpectation(NOT_RELEVANT, false, NOT_RELEVANT));
         dispatcher2.add(new MockExpectation(NOT_RELEVANT, true, NOT_RELEVANT));
         assertFalse("should not be satisfied if second expectation is not satisfied",
                    dispatcher2.isSatisfied());
         
-        InvocationDispatcher dispatcherNone = new InvocationDispatcher();
+        InvocationDispatcher dispatcherNone = new InvocationDispatcher(new Object());
         dispatcherNone.add(new MockExpectation(NOT_RELEVANT, false, NOT_RELEVANT));
         dispatcherNone.add(new MockExpectation(NOT_RELEVANT, true, NOT_RELEVANT));
         assertFalse("should not be satisfied if no expectations are satisfied",

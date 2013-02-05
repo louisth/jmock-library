@@ -11,25 +11,40 @@ import java.util.Iterator;
 import java.util.List;
 
 public class InvocationDispatcher implements ExpectationCollector, SelfDescribing {
-    private List<Expectation> expectations = new ArrayList<Expectation>();
-    private List<StateMachine> stateMachines = new ArrayList<StateMachine>();
-    
+    private final Object lock;
+    private final List<Expectation> expectations = new ArrayList<Expectation>();
+    private final List<StateMachine> stateMachines = new ArrayList<StateMachine>();
+
+    public InvocationDispatcher(Object lock) {
+        this.lock = lock; 
+    }
+
     public StateMachine newStateMachine(String name) {
-        StateMachine stateMachine = new StateMachine(name);
-        stateMachines.add(stateMachine);
-        return stateMachine;
+        synchronized (lock) {
+            StateMachine stateMachine = new StateMachine(name);
+            stateMachines.add(stateMachine);
+            return stateMachine;
+        }
     }
     
+    @Override // from ExpectationCollector
     public void add(Expectation expectation) {
-        expectations.add(expectation);
+        synchronized (lock) {
+            expectations.add(expectation);
+        }
     }
-    
+
+    @Override // from SelfDescribing
     public void describeTo(Description description) {
-        describe(description, expectations);
+        synchronized (lock) {
+            describe(description, expectations);
+        }
     }
 
     public void describeMismatch(Invocation invocation, Description description) {
-        describe(description, describedWith(expectations, invocation));
+        synchronized (lock) {
+            describe(description, describedWith(expectations, invocation));
+        }
     }
 
     private Iterable<SelfDescribing> describedWith(List<Expectation> expectations, final Invocation invocation) {
@@ -67,29 +82,42 @@ public class InvocationDispatcher implements ExpectationCollector, SelfDescribin
     
 
     public boolean isSatisfied() {
-        for (Expectation expectation : expectations) {
-            if (! expectation.isSatisfied()) {
-                return false;
+        synchronized (lock) {
+            for (Expectation expectation : expectations) {
+                if (! expectation.isSatisfied()) {
+                    return false;
+                }
             }
+            return true;
         }
-        return true;
     }
     
     public Object dispatch(Invocation invocation) throws Throwable {
-        for (Expectation expectation : expectations) {
-            if (expectation.matches(invocation)) {
-                return expectation.invoke(invocation);
+        Expectation matchingExpectation=null;
+        synchronized (lock) {
+            for (Expectation expectation : expectations) {
+                if (expectation.matches(invocation)) {
+                    expectation.preInvoke();
+                    matchingExpectation=expectation;
+                    break;
+                }
             }
         }
-        
-        throw ExpectationError.unexpected("unexpected invocation", invocation);
+
+        if (null!=matchingExpectation) {
+            return matchingExpectation.invoke(invocation);
+        } else {
+            throw ExpectationError.unexpected("unexpected invocation", invocation);
+        }
     }
 
     public void clearHistory() {
-        for (Iterator<Expectation> itr=expectations.iterator(); itr.hasNext(); ) {
-            Expectation expectation=itr.next();
-            if (expectation.isHistoric()) {
-                itr.remove();
+        synchronized (lock) {
+            for (Iterator<Expectation> itr=expectations.iterator(); itr.hasNext(); ) {
+                Expectation expectation=itr.next();
+                if (expectation.isHistoric()) {
+                    itr.remove();
+                }
             }
         }
     }

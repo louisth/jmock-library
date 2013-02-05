@@ -73,6 +73,7 @@ public class InvocationExpectation implements Expectation {
         this.actionIsDefault = true;
     }
     
+    @Override // from SelfDescribing
     public void describeTo(Description description) {
         if (! isSatisfied()) {
             description.appendText("! ");
@@ -81,6 +82,7 @@ public class InvocationExpectation implements Expectation {
         describeExpectation(description);
     }
 
+    @Override // from Expectation
     public void describeMismatch(Invocation invocation, Description description) {
         describeExpectation(description);
 
@@ -135,19 +137,22 @@ public class InvocationExpectation implements Expectation {
         return methodIsKnownToBeVoid && actionIsDefault;
     }
 
+    @Override // from Expectation
     public boolean isSatisfied() {
         return cardinality.isSatisfied(invocationCount);
     }
     
+    @Override // from Expectation
     public boolean allowsMoreInvocations() {
         return cardinality.allowsMoreInvocations(invocationCount);
     }
 
-    @Override
+    @Override // from Expectation
     public boolean isHistoric() {
         return !cardinality.allowsMoreInvocations(invocationCount) && cardinality.allowsMoreInvocations(0);
     }
 
+    @Override // from Expectation
     public boolean matches(Invocation invocation) {
         return allowsMoreInvocations()
             && objectMatcher.matches(invocation.getInvokedObject())
@@ -164,9 +169,14 @@ public class InvocationExpectation implements Expectation {
         return true;
     }
     
-    public Object invoke(Invocation invocation) throws Throwable {
+    @Override // from Expectation
+    public void preInvoke() {
         invocationCount++;
         performSideEffects();
+    }
+
+    @Override // from Expectation
+    public Object invoke(Invocation invocation) throws Throwable {
         final Object result = action.invoke(invocation);
         invocation.checkReturnTypeCompatibility(result);
         return result;
@@ -186,6 +196,6 @@ public class InvocationExpectation implements Expectation {
         public boolean isCompatibleWith(Object[] parameters) {
             return true;
         }
-    };
+    }
 
 }
