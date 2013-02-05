@@ -19,8 +19,9 @@ import java.util.List;
  *
  */
 public class ActionSequence implements Action {
-    List<Action> actions;
-    Iterator<Action> iterator;
+    private final Object lock = new Object();
+    private final List<Action> actions;
+    private final Iterator<Action> iterator;
     
     public ActionSequence(Action... actions) {
         this.actions = new ArrayList<Action>(Arrays.asList(actions));
@@ -28,10 +29,14 @@ public class ActionSequence implements Action {
     }
     
     public Object invoke(Invocation invocation) throws Throwable {
-        if (iterator.hasNext()) {
-            return iterator.next().invoke(invocation);
-        } 
-    	throw ExpectationError.unexpected("no more actions available", invocation);
+        Action action;
+        synchronized (lock) {
+            if (!iterator.hasNext()) {
+                throw ExpectationError.unexpected("no more actions available", invocation);
+            }
+            action=iterator.next();
+        }
+        return action.invoke(invocation);
     }
     
     public void describeTo(Description description) {

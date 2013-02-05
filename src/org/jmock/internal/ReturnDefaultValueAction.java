@@ -38,22 +38,18 @@ public class ReturnDefaultValueAction implements Action {
     };
     private final Map<Class<?>, Object> resultValuesByType;
     private Imposteriser imposteriser;
+    private final Object lock;
 
-    public ReturnDefaultValueAction(Imposteriser imposteriser, Map<Class<?>, Object> typeToResultValue) {
+    public ReturnDefaultValueAction(Imposteriser imposteriser, Object lock) {
         this.imposteriser = imposteriser;
-        this.resultValuesByType = typeToResultValue;
+        this.lock = lock;
+        this.resultValuesByType = createDefaultResults();
     }
 
-    public ReturnDefaultValueAction(Imposteriser imposteriser) {
-      this(imposteriser, createDefaultResults());
-    }
-
-    public ReturnDefaultValueAction() {
-        this(new JavaReflectionImposteriser());
-    }
-    
     public void setImposteriser(Imposteriser newImposteriser) {
-        this.imposteriser = newImposteriser;
+        synchronized (lock) {
+            imposteriser = newImposteriser;
+        }
     }
     
     public void describeTo(Description description) {
@@ -61,26 +57,30 @@ public class ReturnDefaultValueAction implements Action {
     }
 
     public void addResult(Class<?> resultType, Object resultValue) {
-        resultValuesByType.put(resultType, resultValue);
+        synchronized (lock) {
+            resultValuesByType.put(resultType, resultValue);
+        }
     }
 
     public Object invoke(Invocation invocation) throws Throwable {
-      final Class<?> returnType = invocation.getInvokedMethod().getReturnType();
+        synchronized (lock) {
+            final Class<?> returnType = invocation.getInvokedMethod().getReturnType();
 
-      if (resultValuesByType.containsKey(returnType)) {
-          return resultValuesByType.get(returnType);
-      }
-      if (returnType.isArray()) {
-          return Array.newInstance(returnType.getComponentType(), 0);
-      }
-      if (isCollectionOrMap(returnType)) {
-        final Object instance = collectionOrMapInstanceFor(returnType);
-        if (instance != null) return instance;
-      }
-      if (imposteriser.canImposterise(returnType)) {
-          return imposteriser.imposterise(this, returnType);
-      }
-      return null;
+            if (resultValuesByType.containsKey(returnType)) {
+                return resultValuesByType.get(returnType);
+            }
+            if (returnType.isArray()) {
+                return Array.newInstance(returnType.getComponentType(), 0);
+            }
+            if (isCollectionOrMap(returnType)) {
+              final Object instance = collectionOrMapInstanceFor(returnType);
+              if (instance != null) return instance;
+            }
+            if (imposteriser.canImposterise(returnType)) {
+                return imposteriser.imposterise(this, returnType);
+            }
+            return null;
+        }
     }
 
     private Object collectionOrMapInstanceFor(Class<?> returnType) throws Throwable {

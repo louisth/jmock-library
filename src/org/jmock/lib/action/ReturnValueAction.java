@@ -13,7 +13,7 @@ import org.jmock.api.Invocation;
  *
  */
 public class ReturnValueAction implements Action {
-    private Object result;
+    private final Object result;
 
     public ReturnValueAction(Object result) {
         this.result = result;

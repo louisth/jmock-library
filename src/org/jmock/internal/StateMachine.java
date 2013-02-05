@@ -6,10 +6,12 @@ import org.jmock.States;
 
 public class StateMachine implements States {
     private final String name;
+    private final Object lock;
     private String currentState = null;
     
-    public StateMachine(String name) {
+    public StateMachine(String name, Object lock) {
         this.name = name;
+        this.lock = lock;
     }
     
     @Override
@@ -23,17 +25,21 @@ public class StateMachine implements States {
     }
     
     public void become(String nextState) {
-        currentState = nextState;
+        synchronized (lock) {
+            currentState = nextState;
+        }
     }
 
     public State is(final String state) {
         return new State() {
             public void activate() {
-                currentState = state;
+                become(state);
             }
 
             public boolean isActive() {
-                return state.equals(currentState);
+                synchronized (lock) {
+                    return state.equals(currentState);
+                }
             }
 
             public void describeTo(Description description) {
@@ -45,7 +51,9 @@ public class StateMachine implements States {
     public StatePredicate isNot(final String state) {
         return new StatePredicate() {
             public boolean isActive() {
-                return !state.equals(currentState);
+                synchronized (lock) {
+                    return !state.equals(currentState);
+                }
             }
 
             public void describeTo(Description description) {
@@ -55,7 +63,9 @@ public class StateMachine implements States {
     }
     
     public void describeTo(Description description) {
-        description.appendText(name)
-                   .appendText(currentState == null ? " has no current state" : (" is " + currentState));
+        synchronized (lock) {
+            description.appendText(name)
+                       .appendText(currentState==null?" has no current state":(" is "+currentState));
+        }
     }
 }

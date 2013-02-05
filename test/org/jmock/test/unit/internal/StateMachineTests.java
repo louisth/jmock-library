@@ -10,7 +10,7 @@ import org.jmock.States;
 import org.jmock.internal.StateMachine;
 
 public class StateMachineTests extends TestCase {
-    States stateMachine = new StateMachine("stateMachineName");
+    States stateMachine = new StateMachine("stateMachineName", new Object());
     
     public void testIsInitiallyInNoState() {
         for (String state : anyState) {

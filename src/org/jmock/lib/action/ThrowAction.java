@@ -13,7 +13,7 @@ import org.jmock.api.Invocation;
  *
  */
 public class ThrowAction implements Action {
-    private Throwable throwable;
+    private final Throwable throwable;
     
     public ThrowAction(Throwable throwable) {
         this.throwable = throwable;
@@ -21,7 +21,7 @@ public class ThrowAction implements Action {
 
     public Object invoke(Invocation invocation) throws Throwable {
         if (isThrowingCheckedException()) {
-            checkTypeCompatiblity(invocation.getInvokedMethod().getExceptionTypes());
+            checkTypeCompatibility(invocation.getInvokedMethod().getExceptionTypes());
         }
 
         throwable.fillInStackTrace();
@@ -33,7 +33,7 @@ public class ThrowAction implements Action {
         description.appendValue(throwable);
     }
 
-    private void checkTypeCompatiblity(Class<?>[] allowedExceptionTypes) {
+    private void checkTypeCompatibility(Class<?>[] allowedExceptionTypes) {
         for (int i = 0; i < allowedExceptionTypes.length; i++) {
             if (allowedExceptionTypes[i].isInstance(throwable))
                 return;
@@ -43,7 +43,7 @@ public class ThrowAction implements Action {
     }
 
     private void reportIncompatibleCheckedException(Class<?>[] allowedTypes) {
-        StringBuffer message = new StringBuffer();
+        StringBuilder message = new StringBuilder();
 
         message.append("tried to throw a ");
         message.append(throwable.getClass().getName());

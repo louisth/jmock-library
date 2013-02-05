@@ -13,9 +13,8 @@ import org.jmock.internal.StateMachine;
 
 
 public class CurrentStateMatcherTests extends TestCase {
-    States stateMachine = new StateMachine("stateMachine");
+    States stateMachine = new StateMachine("stateMachine", new Object());
     Matcher<States> isCurrentlyS = isCurrently("S");
-    Matcher<States> isNotCurrentlyS = isNotCurrently("S");
     
     public void testMatchesStateMachineCurrentlyInNamedState() {
         stateMachine.become("S");

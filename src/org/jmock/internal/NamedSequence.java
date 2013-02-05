@@ -16,10 +16,12 @@ import org.jmock.api.Expectation;
  */
 public class NamedSequence implements Sequence {
     private final String name;
+    private final Object lock;
     private List<Expectation> elements = new ArrayList<Expectation>();
     
-    public NamedSequence(String name) {
+    public NamedSequence(String name, Object lock) {
         this.name = name;
+        this.lock = lock;
     }
     
     @Override
@@ -28,16 +30,20 @@ public class NamedSequence implements Sequence {
     }
     
     public void constrainAsNextInSequence(InvocationExpectation expectation) {
-        int index = elements.size();
-        elements.add(expectation);
-        expectation.addOrderingConstraint(new InSequenceOrderingConstraint(this, index));
+        synchronized (lock) {
+            int index = elements.size();
+            elements.add(expectation);
+            expectation.addOrderingConstraint(new InSequenceOrderingConstraint(this, index));
+        }
     }
     
     private boolean isSatisfiedToIndex(int index) {
-        for (int i = 0; i < index; i++) {
-            if (!elements.get(i).isSatisfied()) return false;
+        synchronized (lock) {
+            for (int i = 0; i < index; i++) {
+                if (!elements.get(i).isSatisfied()) return false;
+            }
+            return true;
         }
-        return true;
     }
     
     private static class InSequenceOrderingConstraint implements OrderingConstraint {

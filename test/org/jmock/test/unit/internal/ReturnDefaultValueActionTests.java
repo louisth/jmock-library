@@ -18,7 +18,7 @@ public class ReturnDefaultValueActionTests {
     static final Object[] NO_ARG_VALUES = new Object[0];
     static final MethodFactory METHOD_FACTORY = new MethodFactory();
 
-    private final ReturnDefaultValueAction action = new ReturnDefaultValueAction();
+    private final ReturnDefaultValueAction action = new ReturnDefaultValueAction(new JavaReflectionImposteriser(), new Object());
 
     @Test public void
     writesDescriptionToStringBuffer() {
@@ -71,7 +71,7 @@ public class ReturnDefaultValueActionTests {
             }
         };
 
-      final ReturnDefaultValueAction imposterised = new ReturnDefaultValueAction(imposteriser);
+      final ReturnDefaultValueAction imposterised = new ReturnDefaultValueAction(imposteriser, new Object());
       imposterised.addResult(int.class, intResult);
         
       final ReturnsAnInt result = (ReturnsAnInt)imposterised.invoke(invocationReturning(ReturnsAnInt.class));

@@ -21,9 +21,9 @@ public class DoAllAction implements Action {
     
     public Object invoke(Invocation invocation) throws Throwable {
         Object result = null;
-        
-        for (int i = 0; i < actions.length; i++) {
-            result = actions[i].invoke(invocation);
+
+        for (Action action : actions) {
+            result = action.invoke(invocation);
         }
         
         return result;

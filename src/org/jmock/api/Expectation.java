@@ -38,8 +38,6 @@ public interface Expectation extends SelfDescribing {
     /**
      * Can the Expectation be invoked with <var>invocation</var>?
      * 
-     * @param invocation
-     * 
      * @return
      *   <code>true</code> if the expectation can be invoked with
      *   <var>invocation</var>, <code>false</code> otherwise.
@@ -49,16 +47,16 @@ public interface Expectation extends SelfDescribing {
     void describeMismatch(Invocation invocation, Description description);
 
     /**
-     * Performs internal operations that must happen before locks are released. 
+     * Performs any internal operations that must happen before locks
+     * are released. 
      */
     void preInvoke();
 
     /**
-     * Invokes the expectation: records that the invocation has
-     * occurred and fakes some behaviour in response.
+     * Performs the behavior necessary to fake the invocation.
      * 
      * @param invocation
-     *     The invocation to record and fake.
+     *     The invocation to fake.
      * @return
      *     A result that is eventually returned from the method call
      *     that caused the invocation.

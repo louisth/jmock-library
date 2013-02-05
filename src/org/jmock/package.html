@@ -1,5 +1,28 @@
 <html>
 <body>
 <p>The jMock "Domain-Specific Embedded Language" API.</p>
+<h3> Thread Safety </h3>
+<p>
+    jMock is thread safe in the most common use cases. That is,
+    adding new expectations, printing the current state, and checking 
+    method calls against the known expectations are all serialized and
+    thread safe.
+</p> <p>
+    This means that the case where a background thread is 
+    running and occasionally calling allowed methods while the 
+    expectations for the next test are being set up is allowed and
+    will not cause problems.
+</p> <p>
+    The Actions taken when a method call is matched are executed with 
+    no locks held. Thus, Actions may take place in multiple threads 
+    simultaneously.
+</p> <p>
+    States are synchronized. This means that a state 
+    machine cannot change state WHILE expectations are being examined
+    (but they can change during an Action).
+</p> <p>
+    Usage of Expectations, State, Sequences, and the like outside of
+    the normal usage pattern is not guaranteed to be safe. 
+</p>
 </body>
 </html>

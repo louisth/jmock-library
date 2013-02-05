@@ -1,20 +1,17 @@
 package org.jmock.test.acceptance;
 
-import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.stringContainsInOrder;
 import static org.junit.Assert.assertThat;
 
 import java.lang.Thread.UncaughtExceptionHandler;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
 import java.util.concurrent.*;
 
 import junit.framework.TestCase;
 
-import org.hamcrest.Matchers;
 import org.jmock.Expectations;
 import org.jmock.Mockery;
 import org.jmock.lib.concurrent.Blitzer;
+import org.jmock.lib.concurrent.SingleThreadedPolicy;
 
 @SuppressWarnings({"ThrowableResultOfMethodCallIgnored"})
 public class WarnAboutMultipleThreadsAcceptanceTests extends TestCase {
@@ -40,6 +37,7 @@ public class WarnAboutMultipleThreadsAcceptanceTests extends TestCase {
 
     public void testKillsThreadsThatTryToCallMockeryThatIsNotThreadSafe() throws InterruptedException {
         Mockery mockery = new Mockery();
+        mockery.setThreadingPolicy(new SingleThreadedPolicy());
         
         final MockedType mock = mockery.mock(MockedType.class, "mock");
         
@@ -54,7 +52,7 @@ public class WarnAboutMultipleThreadsAcceptanceTests extends TestCase {
         });
 
         Throwable exception = exceptionsOnBackgroundThreads.take();
-        assertThat(exception.getMessage(), Matchers.containsString("the Mockery is not thread-safe"));
+        assertThat(exception.getMessage(), stringContainsInOrder("Only thread", "is allowed to use the Mockery."));
     }
     
     @Override

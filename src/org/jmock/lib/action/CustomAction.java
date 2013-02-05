@@ -11,7 +11,7 @@ import org.jmock.api.Action;
  * to implement application-specific actions with inline anonymous classes.
  */
 public abstract class CustomAction implements Action {
-    private String description;
+    private final String description;
     
     public CustomAction(String description) {
         this.description = description;

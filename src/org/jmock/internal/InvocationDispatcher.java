@@ -21,7 +21,7 @@ public class InvocationDispatcher implements ExpectationCollector, SelfDescribin
 
     public StateMachine newStateMachine(String name) {
         synchronized (lock) {
-            StateMachine stateMachine = new StateMachine(name);
+            StateMachine stateMachine = new StateMachine(name, lock);
             stateMachines.add(stateMachine);
             return stateMachine;
         }

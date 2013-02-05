@@ -16,7 +16,7 @@ import org.jmock.api.Invocation;
  * @author nat
  */
 public class ReturnEnumerationAction implements Action {
-    private Collection<?> collection;
+    private final Collection<?> collection;
     
     public ReturnEnumerationAction(Collection<?> collection) {
         this.collection = collection;

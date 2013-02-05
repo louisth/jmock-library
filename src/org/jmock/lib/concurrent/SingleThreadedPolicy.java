@@ -1,11 +1,10 @@
-package org.jmock.internal;
+package org.jmock.lib.concurrent;
 
 import java.util.ConcurrentModificationException;
 
 import org.jmock.api.Invocation;
 import org.jmock.api.Invokable;
 import org.jmock.api.ThreadingPolicy;
-import org.jmock.lib.concurrent.Synchroniser;
 
 public class SingleThreadedPolicy implements ThreadingPolicy {
     private final Thread testThread;
@@ -25,8 +24,7 @@ public class SingleThreadedPolicy implements ThreadingPolicy {
     
     private void checkRunningOnTestThread() {
         if (Thread.currentThread() != testThread) {
-            reportError("the Mockery is not thread-safe: use a " + 
-                        Synchroniser.class.getSimpleName() + " to ensure thread safety");
+            reportError("Only thread "+testThread+" is allowed to use the Mockery.");
         }
     }
     

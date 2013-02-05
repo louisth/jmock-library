@@ -7,7 +7,7 @@ import org.jmock.internal.*;
 import org.jmock.lib.CamelCaseNamingScheme;
 import org.jmock.lib.IdentityExpectationErrorTranslator;
 import org.jmock.lib.JavaReflectionImposteriser;
-import org.jmock.lib.concurrent.Synchroniser;
+import org.jmock.lib.concurrent.FreeThreadingPolicy;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -30,11 +30,11 @@ public class Mockery implements SelfDescribing {
     private Imposteriser imposteriser = JavaReflectionImposteriser.INSTANCE;
     private ExpectationErrorTranslator expectationErrorTranslator = IdentityExpectationErrorTranslator.INSTANCE;
     private MockObjectNamingScheme namingScheme = CamelCaseNamingScheme.INSTANCE;
-    private ThreadingPolicy threadingPolicy = new SingleThreadedPolicy();
+    private ThreadingPolicy threadingPolicy = new FreeThreadingPolicy();
 
     private final Object lock = new Object();
     private final Set<String> mockNames = new HashSet<String>();
-    private final ReturnDefaultValueAction defaultAction = new ReturnDefaultValueAction(imposteriser);
+    private final ReturnDefaultValueAction defaultAction = new ReturnDefaultValueAction(imposteriser, lock);
     private final List<Invocation> actualInvocations = new ArrayList<Invocation>();
     private final InvocationDispatcher dispatcher = new InvocationDispatcher(lock);
 
@@ -106,10 +106,9 @@ public class Mockery implements SelfDescribing {
     /**
      * Changes the policy by which the Mockery copes with multiple threads.
      * 
-     *  The default policy throws an exception if the Mockery is called from different
-     *  threads.
-     *  
-     *  @see Synchroniser
+     * @see org.jmock.lib.concurrent.FreeThreadingPolicy FreeThreadingPolicy
+     * @see org.jmock.lib.concurrent.SingleThreadedPolicy SingleThreadedPolicy
+     * @see org.jmock.lib.concurrent.Synchroniser Synchroniser
      */
     public void setThreadingPolicy(ThreadingPolicy threadingPolicy) {
         synchronized (lock) {
@@ -158,7 +157,7 @@ public class Mockery implements SelfDescribing {
      *     A new sequence with the given name.
      */
     public Sequence sequence(String name) {
-        return new NamedSequence(name);
+        return new NamedSequence(name, lock);
     }
     
     /** 

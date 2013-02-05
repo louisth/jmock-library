@@ -1,6 +1,7 @@
 package org.jmock.test.unit.internal;
 
 import org.jmock.internal.ReturnDefaultValueAction;
+import org.jmock.lib.JavaReflectionImposteriser;
 import org.junit.Test;
 
 import javax.xml.ws.handler.LogicalMessageContext;
@@ -19,7 +20,7 @@ import static org.jmock.test.unit.internal.ReturnDefaultValueActionTests.invocat
  *
  */
 public class ReturnDefaultCollectionTests {
-  private final ReturnDefaultValueAction action = new ReturnDefaultValueAction();
+  private final ReturnDefaultValueAction action = new ReturnDefaultValueAction(new JavaReflectionImposteriser(), new Object());
 
   @SuppressWarnings("unchecked")
   @Test public void
